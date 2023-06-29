@@ -6,7 +6,7 @@ import (
 
 var router *gin.Engine
 
-func main() {
+func main2() {
 	router = gin.Default()
 
 	router.LoadHTMLGlob("templates/*")
