@@ -1,4 +1,4 @@
-package main
+package handler_test
 
 import (
 	"io/ioutil"
@@ -6,16 +6,19 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/nangmans14/gin-web/handler"
+	common "github.com/nangmans14/gin-web/test"
 )
 
 func TestShowIndexPageUnauthenticated(t *testing.T) {
-	r := getRouter(true)
+	r := common.GetRouter(true)
 
-	r.GET("/", showIndexPage)
+	r.GET("/", handler.ShowIndexPage)
 
 	req, _ := http.NewRequest("GET", "/", nil)
 
-	testHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
+	common.TestHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
 		statusOK := w.Code == http.StatusOK
 
 		p, err := ioutil.ReadAll(w.Body)

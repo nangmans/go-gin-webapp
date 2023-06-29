@@ -1,26 +1,26 @@
-package main
+package model
 
 import (
 	"errors"
 )
 
-type article struct {
+type Article struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
 
-var articleList = []article{
+var ArticleList = []Article{
 	{ID: 1, Title: "Article 1", Content: "Article 1 body"},
 	{ID: 2, Title: "Article 2", Content: "Article 2 body"},
 }
 
-func getAllArticles() []article {
-	return articleList
+func GetAllArticles() []Article {
+	return ArticleList
 }
 
-func getArticleByID(id int) (*article, error) {
-	for _, a := range articleList {
+func GetArticleByID(id int) (*Article, error) {
+	for _, a := range ArticleList {
 		if a.ID == id {
 			return &a, nil
 		}

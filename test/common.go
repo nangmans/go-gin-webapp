@@ -1,4 +1,4 @@
-package main
+package common_test
 
 import (
 	"net/http"
@@ -6,10 +6,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/nangmans14/gin-web/model"
+
 	"github.com/gin-gonic/gin"
 )
 
-var tmpArticleList []article
+var tmpArticleList []model.Article
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
@@ -17,15 +19,15 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func getRouter(withTemplates bool) *gin.Engine {
+func GetRouter(withTemplates bool) *gin.Engine {
 	r := gin.Default()
 	if withTemplates {
-		r.LoadHTMLGlob("templates/*")
+		r.LoadHTMLGlob("../templates/*")
 	}
 	return r
 }
 
-func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *httptest.ResponseRecorder) bool) {
+func TestHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *httptest.ResponseRecorder) bool) {
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
@@ -36,5 +38,5 @@ func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *
 }
 
 func saveLists() {
-	tmpArticleList = articleList
+	tmpArticleList = model.ArticleList
 }
