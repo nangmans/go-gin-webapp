@@ -14,7 +14,7 @@ func main() {
 
 	router.GET("/", handler.ShowIndexPage)
 
-	router.GET("/article/view/:article_id", handler.GetArticle)
+	// router.GET("/article/view/:article_id", handler.GetArticle)
 
 	router.Run()
 }

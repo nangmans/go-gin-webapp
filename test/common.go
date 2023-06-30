@@ -6,12 +6,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nangmans14/gin-web/model"
+	article "github.com/nangmans14/gin-web/model/article"
+	model "github.com/nangmans14/gin-web/model/article"
 
 	"github.com/gin-gonic/gin"
 )
 
-var tmpArticleList []model.Article
+var tmpArticleList []article.Article
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
