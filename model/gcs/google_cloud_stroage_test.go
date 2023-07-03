@@ -18,3 +18,12 @@ func TestListBuckets(t *testing.T) {
 	}
 	fmt.Printf("buckets : %s", buckets)
 }
+
+func TestListObjects(t *testing.T) {
+
+	objects, err := gcs.ListObjects(ioutil.Discard, "iso-collection")
+	if err != nil {
+		t.Fatalf("listObjects: %v", err)
+	}
+	fmt.Printf("Objects: %s", objects)
+}

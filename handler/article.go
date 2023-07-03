@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nangmans14/gin-web/model/gcs"
@@ -22,20 +23,16 @@ func ShowIndexPage(c *gin.Context) {
 	}, "index.html")
 }
 
-// func GetBucket(c *gin.Context) {
-// 	if articleID, err := strconv.Atoi(c.Param("article_id")); err == nil {
-// 		if article, err := article.GetArticleByID(articleID); err == nil {
-// 			c.HTML(
-// 				http.StatusOK,
-// 				"article.html",
-// 				gin.H{
-// 					"title":   article.Title,
-// 				},
-// 			)
-// 		} else {
-// 			c.AbortWithError(http.StatusNotFound, err)
-// 		}
-// 	} else {
-// 		c.AbortWithStatus(http.StatusNotFound)
-// 	}
-// }
+func GetBucketObjects(c *gin.Context) {
+	if objects, err := gcs.ListObjects(ioutil.Discard, c.Param("bucket_id")); err == nil {
+		c.HTML(
+			http.StatusOK,
+			"article.html",
+			gin.H{
+				"name": objects,
+			},
+		)
+	} else {
+		c.AbortWithError(http.StatusNotFound, err)
+	}
+}

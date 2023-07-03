@@ -5,8 +5,11 @@
 
     <!--Loop over the payload variable, which is the list of articles-->
     {{range .payload }}
+        <!--Create the link for the article based on its ID-->
+        <a href="/storage/{{.}}">
             <!--Display the title of the article -->
             <h2>{{.}}</h2>
+        </a>
     {{end}}
 
 <!--Embed the footer.html template at this location-->
