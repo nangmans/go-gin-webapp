@@ -3,14 +3,14 @@ package handler
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nangmans14/gin-web/model/gcs"
 )
 
-const projectID string = "prj-cc-sandbox-devops-0010"
+const projectID string = "prj-prod-datadev-8411"
 
+// This comment is required for go doc when the function is exported.
 func ShowIndexPage(c *gin.Context) {
 	buckets, err := gcs.ListBuckets(ioutil.Discard, projectID)
 	if err != nil {
@@ -23,16 +23,26 @@ func ShowIndexPage(c *gin.Context) {
 	}, "index.html")
 }
 
-func GetBucketObjects(c *gin.Context) {
-	if objects, err := gcs.ListObjects(ioutil.Discard, c.Param("bucket_id")); err == nil {
-		c.HTML(
-			http.StatusOK,
-			"article.html",
-			gin.H{
-				"name": objects,
-			},
-		)
-	} else {
-		c.AbortWithError(http.StatusNotFound, err)
+func ShowStoragePage(c *gin.Context) {
+	objects, err := gcs.ListObjects(ioutil.Discard, *gcs.bucket)
+	if err != nil {
+		fmt.Printf("ListObjects: %s", err)
 	}
+
+	Render(c, gin.H{
+		"bucket_id": c.Param("bucket_id"),
+		"payload":   objects,
+	}, "article.html")
+
+}
+
+func ShowObjectPage(c *gin.Context) {
+	attrs, err := gcs.GetMetadata(ioutil.Discard, c.Param("bucket_id"), c.Param("object_name"))
+	if err != nil {
+		fmt.Printf("GetMetadata: %s", err)
+	}
+
+	Render(c, gin.H{
+		"payload": attrs,
+	}, "article.html")
 }

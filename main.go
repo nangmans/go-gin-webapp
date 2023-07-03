@@ -14,7 +14,9 @@ func main() {
 
 	router.GET("/", handler.ShowIndexPage)
 
-	router.GET("/storage/:bucket_id", handler.GetBucketObjects)
+	// router.GET("/storage/:bucket_id", handler.ShowStoragePage)
+
+	router.GET("/storage/:bucket_id/object/:object_name", handler.ShowObjectPage)
 
 	router.Run()
 }

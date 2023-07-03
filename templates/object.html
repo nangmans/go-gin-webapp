@@ -5,10 +5,7 @@
 
     {{range .payload }}
         <!--Display the title of the article -->
-        <a href="/storage/{{.bucket_id}}/object/{{.}}">
-            <!--Display the title of the article -->
-            <p>{{.name}}</p>
-        </a>       
+        <p>{{.}}</p>
     {{end}}
 <!-- <p>{{.name}}</p> -->
 
