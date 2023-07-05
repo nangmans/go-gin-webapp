@@ -3,10 +3,10 @@
 <!--Embed the header.html template at this location-->
 {{ template "header.html" .}}
 
-    {{range .payload }}
+
         <!--Display the title of the article -->
-        <p>{{.}}</p>
-    {{end}}
+        <p>{{.payload}}</p>
+
 <!-- <p>{{.name}}</p> -->
 
 <!--Embed the footer.html template at this location-->

@@ -2,62 +2,47 @@ package gcs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
 )
 
-type bucket struct {
+type Bucket struct {
 	Name    string
-	Objects [](*object)
+	Objects [](*Object)
 }
 
-func newBucket(n string) (*bucket, error) {
-	return &bucket{
+func newBucket(n string) (*Bucket, error) {
+	return &Bucket{
 		Name: n,
 	}, nil
 }
 
-func (b *bucket) Append(o string) (*bucket, error) {
-	obj, err := newObject(b, o)
-	if err != nil {
-		return nil, err
-	}
-	b.Objects = append(b.Objects, obj)
+// func (b *Bucket) Append(o string) (*Bucket, error) {
+// 	obj, err := newObject(b, o)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	b.Objects = append(b.Objects, obj)
 
-	return b, nil
+// 	return b, nil
+// }
+
+func GetBucketByName(b []*Bucket, n string) (*Bucket, error) {
+	for _, a := range b {
+		if a.Name == n {
+			return a, nil
+		}
+	}
+	return nil, errors.New("Bucket Not Found")
 }
 
-type object struct {
-	name     string
-	metadata *storage.ObjectAttrs
-}
-
-func newObject(b *bucket, n string) (*object, error) {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
-
-	attrs, err := client.Bucket(b.Name).Object(n).Attrs(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &object{
-		name:     attrs.Name,
-		metadata: attrs,
-	}, nil
-}
-
-func ListBuckets(w io.Writer, projectID string) ([]*bucket, error) {
+func ListBuckets(w io.Writer, projectID string) ([]*Bucket, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -68,7 +53,7 @@ func ListBuckets(w io.Writer, projectID string) ([]*bucket, error) {
 	ctx, cancle := context.WithTimeout(ctx, time.Second*30)
 	defer cancle()
 
-	var buckets []*bucket
+	var buckets []*Bucket
 	it := client.Buckets(ctx, projectID)
 	for {
 		battrs, err := it.Next()
@@ -87,7 +72,33 @@ func ListBuckets(w io.Writer, projectID string) ([]*bucket, error) {
 	return buckets, nil
 }
 
-func ListObjects(w io.Writer, bucket *bucket) ([]*object, error) {
+type Object struct {
+	Name     string
+	Parent   string
+	IsRoot   bool
+	Metadata *storage.ObjectAttrs
+}
+
+func newObject(b *Bucket, n string) (*Object, error) {
+	lstidx := strings.LastIndex(n, "/")
+	name := n[lstidx+1:]
+	parent := n[:lstidx+1]
+	return &Object{
+		Name:   name,
+		Parent: parent,
+	}, nil
+}
+
+func GetObjectByName(o []*Object, n string) (*Object, error) {
+	for _, a := range o {
+		if a.Name == n {
+			return a, nil
+		}
+	}
+	return nil, errors.New("Object Not Found")
+}
+
+func ListObjects(w io.Writer, bucket *Bucket, parent ...string) ([]*Object, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -98,8 +109,13 @@ func ListObjects(w io.Writer, bucket *bucket) ([]*object, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 
-	var objects []*object
-	it := client.Bucket(bucket.Name).Objects(ctx, nil)
+	var objects []*Object
+	query := &storage.Query{
+		Prefix:    "TM/",
+		Delimiter: "/",
+	}
+
+	it := client.Bucket(bucket.Name).Objects(ctx, query)
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {

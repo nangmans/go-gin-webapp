@@ -12,9 +12,11 @@ func main() {
 
 	router.LoadHTMLGlob("templates/*")
 
+	router.Use(handler.SetBucket)
+
 	router.GET("/", handler.ShowIndexPage)
 
-	// router.GET("/storage/:bucket_id", handler.ShowStoragePage)
+	router.GET("/storage/:bucket_id", handler.ShowStoragePage)
 
 	router.GET("/storage/:bucket_id/object/:object_name", handler.ShowObjectPage)
 

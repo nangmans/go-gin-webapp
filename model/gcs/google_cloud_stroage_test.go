@@ -10,6 +10,8 @@ import (
 
 const projectID string = "prj-cc-sandbox-devops-0010"
 
+var bucket *gcs.Bucket
+
 func TestListBuckets(t *testing.T) {
 
 	buckets, err := gcs.ListBuckets(ioutil.Discard, projectID)
@@ -21,7 +23,7 @@ func TestListBuckets(t *testing.T) {
 
 func TestListObjects(t *testing.T) {
 
-	objects, err := gcs.ListObjects(ioutil.Discard, "iso-collection")
+	objects, err := gcs.ListObjects(ioutil.Discard, bucket)
 	if err != nil {
 		t.Fatalf("listObjects: %v", err)
 	}
