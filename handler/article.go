@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nangmans14/gin-web/model/gcs"
@@ -11,18 +10,21 @@ import (
 
 const projectID string = "prj-prod-datadev-8411"
 
-func SetBucket(c *gin.Context) {
+// func SetBucket(c *gin.Context) {
+// 	buckets, err := gcs.ListBuckets(ioutil.Discard, projectID)
+// 	if err != nil {
+// 		fmt.Printf("ListBuckets: %s", err)
+// 	}
+// 	c.Set("buckets", buckets)
+// 	c.Next()
+// }
+
+// This comment is required for go doc when the function is exported.
+func ShowIndexPage(c *gin.Context) {
 	buckets, err := gcs.ListBuckets(ioutil.Discard, projectID)
 	if err != nil {
 		fmt.Printf("ListBuckets: %s", err)
 	}
-	c.Set("buckets", buckets)
-	c.Next()
-}
-
-// This comment is required for go doc when the function is exported.
-func ShowIndexPage(c *gin.Context) {
-	buckets := c.MustGet("buckets").([]*gcs.Bucket)
 
 	Render(c, gin.H{
 		"title":   "Home Page",
@@ -32,38 +34,42 @@ func ShowIndexPage(c *gin.Context) {
 }
 
 func ShowStoragePage(c *gin.Context) {
-	buckets := c.MustGet("buckets").([]*gcs.Bucket)
 
-	bucket, err := gcs.GetBucketByName(buckets, c.Param("bucket_id"))
+	bucket, err := gcs.ListBuckets(ioutil.Discard, projectID, c.Param("bucket_id"))
 	if err != nil {
 		fmt.Printf("GetBucketByName: %s", err)
 	}
 
-	objects, err := gcs.ListObjects(ioutil.Discard, bucket)
+	objects, err := gcs.ListObjects(ioutil.Discard, bucket[0])
 	if err != nil {
 		fmt.Printf("ListObjects: %s", err)
 	}
-	bucket.Objects = objects
 
-	// Must be located before Render()
-	c.Set("objects", objects)
+	bucket[0].Objects = objects
 
 	Render(c, gin.H{
-		"bucket_id": bucket.Name,
-		"payload":   bucket.Objects,
+		"bucket_id": bucket[0].Name,
+		"payload":   objects,
 	}, "article.html")
 
 }
 
 func ShowObjectPage(c *gin.Context) {
-	objects := c.MustGet("objects").([]*gcs.Object)
 
-	object, err := gcs.GetObjectByName(objects, c.Param("object_name"))
+	bucket, err := gcs.ListBuckets(ioutil.Discard, projectID, c.Param("bucket_id"))
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
-	} else {
-		Render(c, gin.H{
-			"payload": object,
-		}, "object.html")
+		fmt.Printf("GetBucketByName: %s", err)
 	}
+
+	objects, err := gcs.ListObjects(ioutil.Discard, bucket[0], c.Param("object_id"))
+	if err != nil {
+		fmt.Printf("ListObjects: %s", err)
+	}
+
+	bucket[0].Objects = objects
+
+	Render(c, gin.H{
+		"payload": objects,
+	}, "article.html")
+
 }

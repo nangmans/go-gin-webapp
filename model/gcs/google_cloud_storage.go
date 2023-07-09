@@ -42,7 +42,7 @@ func GetBucketByName(b []*Bucket, n string) (*Bucket, error) {
 	return nil, errors.New("Bucket Not Found")
 }
 
-func ListBuckets(w io.Writer, projectID string) ([]*Bucket, error) {
+func ListBuckets(w io.Writer, projectID string, name ...string) ([]*Bucket, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -54,7 +54,13 @@ func ListBuckets(w io.Writer, projectID string) ([]*Bucket, error) {
 	defer cancle()
 
 	var buckets []*Bucket
+
 	it := client.Buckets(ctx, projectID)
+
+	if name != nil {
+		it.Prefix = name[0]
+	}
+
 	for {
 		battrs, err := it.Next()
 		if err == iterator.Done {
@@ -75,30 +81,51 @@ func ListBuckets(w io.Writer, projectID string) ([]*Bucket, error) {
 type Object struct {
 	Name     string
 	Parent   string
-	IsRoot   bool
 	Metadata *storage.ObjectAttrs
 }
 
 func newObject(b *Bucket, n string) (*Object, error) {
-	lstidx := strings.LastIndex(n, "/")
-	name := n[lstidx+1:]
-	parent := n[:lstidx+1]
+	var (
+		lstIdx       int
+		name, parent string
+	)
+
+	if n[len(n)-1] != '/' {
+		lstIdx = strings.LastIndex(n, "/")
+	} else {
+		lstIdx = strings.LastIndex(n[:len(n)-1], "/")
+	}
+
+	if n[:lstIdx+1] == "" {
+		name = n[lstIdx+1:]
+		parent = b.Name
+	} else {
+		name = n[lstIdx+1:]
+		parent = n[:lstIdx+1]
+	}
+
 	return &Object{
 		Name:   name,
 		Parent: parent,
 	}, nil
+
 }
 
-func GetObjectByName(o []*Object, n string) (*Object, error) {
+func GetObjectByName(o []*Object, p string) (*Object, error) {
 	for _, a := range o {
-		if a.Name == n {
+		if a.Parent == p {
 			return a, nil
 		}
 	}
 	return nil, errors.New("Object Not Found")
 }
 
-func ListObjects(w io.Writer, bucket *Bucket, parent ...string) ([]*Object, error) {
+func ListObjects(w io.Writer, b *Bucket, q ...string) ([]*Object, error) {
+	var (
+		objects []*Object
+		name    string
+	)
+
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -109,13 +136,18 @@ func ListObjects(w io.Writer, bucket *Bucket, parent ...string) ([]*Object, erro
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 
-	var objects []*Object
+	if len(q) != 0 {
+		name = q[0]
+	}
+	fmt.Printf("query is %s", name)
 	query := &storage.Query{
-		Prefix:    "TM/",
-		Delimiter: "/",
+		Delimiter:                "/",
+		IncludeTrailingDelimiter: true,
+		Prefix:                   name,
 	}
 
-	it := client.Bucket(bucket.Name).Objects(ctx, query)
+	it := client.Bucket(b.Name).Objects(ctx, query)
+
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
@@ -124,7 +156,17 @@ func ListObjects(w io.Writer, bucket *Bucket, parent ...string) ([]*Object, erro
 		if err != nil {
 			return nil, err
 		}
-		object, err := newObject(bucket, attrs.Name)
+
+		name := attrs.Name
+
+		switch {
+		case len(name) == 0:
+			name = attrs.Prefix
+		case name[len(name)-1] == '/':
+			continue
+		}
+
+		object, err := newObject(b, name)
 		if err != nil {
 			return nil, err
 		}
