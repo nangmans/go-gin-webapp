@@ -11,8 +11,9 @@ func main() {
 	router = gin.Default()
 
 	// router.UnescapePathValues = false
-	router.RemoveExtraSlash = true
-	router.RedirectTrailingSlash = false
+	// // router.UseRawPath = true
+	// router.RemoveExtraSlash = false
+	// router.RedirectTrailingSlash = true
 
 	router.LoadHTMLGlob("templates/*")
 
@@ -20,7 +21,7 @@ func main() {
 
 	router.GET("/storage/:bucket_id", handler.ShowStoragePage)
 
-	router.GET("/storage/:bucket_id/object/:object_id", handler.ShowObjectPage)
+	router.GET("/storage/:bucket_id/object/*object_id", handler.ShowObjectPage)
 
 	router.Run()
 }

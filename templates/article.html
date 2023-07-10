@@ -6,7 +6,7 @@
     {{range .payload }}
         <!--Display the title of the article -->
         <!-- When execution begins, $ is set to the data argument passed to Execute, that is, to the starting value of dot. -->
-        <a href="/storage/{{$.bucket_id}}/object/{{.Name}}">
+        <a href="/storage/{{$.bucket_id}}/object/{{$.object_id}}{{.Name}}">
             <!--Display the title of the article -->
             <p>{{.Name}}</p>
         </a>       

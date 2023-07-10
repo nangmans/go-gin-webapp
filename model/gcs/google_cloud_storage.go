@@ -23,16 +23,6 @@ func newBucket(n string) (*Bucket, error) {
 	}, nil
 }
 
-// func (b *Bucket) Append(o string) (*Bucket, error) {
-// 	obj, err := newObject(b, o)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	b.Objects = append(b.Objects, obj)
-
-// 	return b, nil
-// }
-
 func GetBucketByName(b []*Bucket, n string) (*Bucket, error) {
 	for _, a := range b {
 		if a.Name == n {
@@ -139,7 +129,7 @@ func ListObjects(w io.Writer, b *Bucket, q ...string) ([]*Object, error) {
 	if len(q) != 0 {
 		name = q[0]
 	}
-	fmt.Printf("query is %s", name)
+
 	query := &storage.Query{
 		Delimiter:                "/",
 		IncludeTrailingDelimiter: true,
