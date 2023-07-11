@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -77,15 +78,25 @@ type Object struct {
 func newObject(b *Bucket, n string) (*Object, error) {
 	var (
 		lstIdx       int
+		objAttr      *storage.ObjectAttrs
+		err          error
 		name, parent string
 	)
 
+	// Check whether n is folder or file
 	if n[len(n)-1] != '/' {
+		// n is a file
 		lstIdx = strings.LastIndex(n, "/")
+		objAttr, err = GetMetadata(ioutil.Discard, b, n)
+		if err != nil {
+			return nil, fmt.Errorf("GetMetadata: %w", err)
+		}
 	} else {
+		// n is a folder
 		lstIdx = strings.LastIndex(n[:len(n)-1], "/")
 	}
 
+	// Check whether n is at root or not
 	if n[:lstIdx+1] == "" {
 		name = n[lstIdx+1:]
 		parent = b.Name
@@ -95,8 +106,9 @@ func newObject(b *Bucket, n string) (*Object, error) {
 	}
 
 	return &Object{
-		Name:   name,
-		Parent: parent,
+		Name:     name,
+		Parent:   parent,
+		Metadata: objAttr,
 	}, nil
 
 }
@@ -165,7 +177,7 @@ func ListObjects(w io.Writer, b *Bucket, q ...string) ([]*Object, error) {
 	return objects, nil
 }
 
-func GetMetadata(w io.Writer, bucket, object string) (*storage.ObjectAttrs, error) {
+func GetMetadata(w io.Writer, b *Bucket, object string) (*storage.ObjectAttrs, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -176,7 +188,7 @@ func GetMetadata(w io.Writer, bucket, object string) (*storage.ObjectAttrs, erro
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 
-	o := client.Bucket(bucket).Object(object)
+	o := client.Bucket(b.Name).Object(object)
 	attrs, err := o.Attrs(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Object(%q).Attrs: %w", object, err)

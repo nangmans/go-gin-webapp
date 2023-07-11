@@ -4,10 +4,12 @@
 {{ template "header.html" .}}
 
 
-        <!--Display the title of the article -->
-        <p>{{.payload}}</p>
+        <h1>{{.payload.Name}}</h1>
+        <p>{{.payload.Bucket}}</p>
+        <p>{{.payload.Size}}</p>
+        <p>{{.payload.Created}}</p>
+        <p>{{.payload.Updated}}</p>
 
-<!-- <p>{{.name}}</p> -->
 
 <!--Embed the footer.html template at this location-->
 {{ template "footer.html" .}}

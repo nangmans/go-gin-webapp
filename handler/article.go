@@ -36,7 +36,6 @@ func ShowIndexPage(c *gin.Context) {
 
 func ShowStoragePage(c *gin.Context) {
 
-	fmt.Print(c.Param("bucket_id"))
 	bucket, err := gcs.ListBuckets(ioutil.Discard, projectID, c.Param("bucket_id"))
 	if err != nil {
 		fmt.Printf("GetBucketByName: %s", err)
@@ -48,7 +47,7 @@ func ShowStoragePage(c *gin.Context) {
 	}
 
 	bucket[0].Objects = objects
-	fmt.Print(objects[3].Name)
+
 	Render(c, gin.H{
 		"object_id": "",
 		"bucket_id": bucket[0].Name,
@@ -58,7 +57,6 @@ func ShowStoragePage(c *gin.Context) {
 }
 
 func ShowObjectPage(c *gin.Context) {
-	fmt.Print(c.Param("object_id"))
 
 	name := strings.TrimPrefix(c.Param("object_id"), "/")
 	bucket, err := gcs.ListBuckets(ioutil.Discard, projectID, c.Param("bucket_id"))
@@ -72,7 +70,7 @@ func ShowObjectPage(c *gin.Context) {
 	}
 
 	bucket[0].Objects = objects
-	fmt.Print(name)
+	fmt.Print(objects[0].Metadata)
 	if name[len(name)-1] == '/' {
 		Render(c, gin.H{
 			"object_id": name,
@@ -83,7 +81,7 @@ func ShowObjectPage(c *gin.Context) {
 		Render(c, gin.H{
 			"object_id": name,
 			"bucket_id": c.Param("bucket_id"),
-			"payload":   objects,
+			"payload":   objects[0].Metadata,
 		}, "object.html")
 	}
 
