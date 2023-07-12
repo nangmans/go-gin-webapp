@@ -27,11 +27,14 @@ func ShowIndexPage(c *gin.Context) {
 		fmt.Printf("ListBuckets: %s", err)
 	}
 
-	Render(c, gin.H{
-		"title":   "Home Page",
-		"payload": buckets,
-	}, "index.html")
-
+	if buckets == nil {
+		Render(c, gin.H{}, "bucket_not_found.html")
+	} else {
+		Render(c, gin.H{
+			"title":   "Home Page",
+			"payload": buckets,
+		}, "index.html")
+	}
 }
 
 func ShowStoragePage(c *gin.Context) {
@@ -48,12 +51,16 @@ func ShowStoragePage(c *gin.Context) {
 
 	bucket[0].Objects = objects
 
-	Render(c, gin.H{
-		"object_id": "",
-		"bucket_id": bucket[0].Name,
-		"payload":   objects,
-	}, "article.html")
-
+	// If any objects are not found
+	if objects == nil {
+		Render(c, gin.H{}, "object_not_found.html")
+	} else {
+		Render(c, gin.H{
+			"object_id": "",
+			"bucket_id": bucket[0].Name,
+			"payload":   objects,
+		}, "article.html")
+	}
 }
 
 func ShowObjectPage(c *gin.Context) {
@@ -69,20 +76,21 @@ func ShowObjectPage(c *gin.Context) {
 		fmt.Printf("ListObjects: %s", err)
 	}
 
-	bucket[0].Objects = objects
-	fmt.Print(objects[0].Metadata)
-	if name[len(name)-1] == '/' {
+	//bucket[0].Objects = objects
+	switch {
+	case objects == nil:
+		Render(c, gin.H{}, "object_not_found.html")
+	case name[len(name)-1] == '/':
 		Render(c, gin.H{
 			"object_id": name,
 			"bucket_id": c.Param("bucket_id"),
 			"payload":   objects,
 		}, "article.html")
-	} else {
+	default:
 		Render(c, gin.H{
 			"object_id": name,
 			"bucket_id": c.Param("bucket_id"),
 			"payload":   objects[0].Metadata,
 		}, "object.html")
 	}
-
 }
