@@ -6,13 +6,8 @@ import (
 	"os"
 	"testing"
 
-	article "github.com/nangmans14/gin-web/model/article"
-	model "github.com/nangmans14/gin-web/model/article"
-
 	"github.com/gin-gonic/gin"
 )
-
-var tmpArticleList []article.Article
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
@@ -36,8 +31,4 @@ func TestHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *
 	if !f(w) {
 		t.Fail()
 	}
-}
-
-func saveLists() {
-	tmpArticleList = model.ArticleList
 }
