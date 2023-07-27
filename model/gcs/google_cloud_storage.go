@@ -34,6 +34,9 @@ func GetBucketByName(b []*Bucket, n string) (*Bucket, error) {
 }
 
 func ListBuckets(w io.Writer, projectID string, name ...string) ([]*Bucket, error) {
+
+	var buckets []*Bucket
+
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -43,8 +46,6 @@ func ListBuckets(w io.Writer, projectID string, name ...string) ([]*Bucket, erro
 
 	ctx, cancle := context.WithTimeout(ctx, time.Second*30)
 	defer cancle()
-
-	var buckets []*Bucket
 
 	it := client.Buckets(ctx, projectID)
 
@@ -72,27 +73,35 @@ func ListBuckets(w io.Writer, projectID string, name ...string) ([]*Bucket, erro
 type Object struct {
 	Name     string
 	Parent   string
-	Metadata *storage.ObjectAttrs
+	Metadata *Metadata
 }
 
-func newObject(b *Bucket, n string) (*Object, error) {
+type Metadata struct {
+	Name    string
+	Bucket  string
+	Size    int64
+	Created time.Time
+	Updated time.Time
+}
+
+func newObjectWithMetadata(b *Bucket, n string) (*Object, error) {
 	var (
 		lstIdx       int
-		objAttr      *storage.ObjectAttrs
+		objAttr      *Metadata
 		err          error
 		name, parent string
 	)
 
 	// Check whether n is folder or file
 	if n[len(n)-1] != '/' {
-		// n is a file
+		// If n is file
 		lstIdx = strings.LastIndex(n, "/")
 		objAttr, err = GetMetadata(ioutil.Discard, b, n)
 		if err != nil {
 			return nil, fmt.Errorf("GetMetadata: %w", err)
 		}
 	} else {
-		// n is a folder
+		// If n is folder
 		lstIdx = strings.LastIndex(n[:len(n)-1], "/")
 	}
 
@@ -113,13 +122,44 @@ func newObject(b *Bucket, n string) (*Object, error) {
 
 }
 
-func GetObjectByName(o []*Object, p string) (*Object, error) {
-	for _, a := range o {
-		if a.Parent == p {
-			return a, nil
-		}
+func newObjectWithoutMetadata(b *Bucket, n string) (*Object, error) {
+	var (
+		lstIdx       int
+		name, parent string
+	)
+
+	// Check whether n is folder or file
+	if n[len(n)-1] != '/' {
+		// If n is file
+		lstIdx = strings.LastIndex(n, "/")
+	} else {
+		// If n is folder
+		lstIdx = strings.LastIndex(n[:len(n)-1], "/")
 	}
-	return nil, errors.New("Object Not Found")
+
+	// Check whether n is at root or not
+	if n[:lstIdx+1] == "" {
+		name = n[lstIdx+1:]
+		parent = b.Name
+	} else {
+		name = n[lstIdx+1:]
+		parent = n[:lstIdx+1]
+	}
+
+	return &Object{
+		Name:   name,
+		Parent: parent,
+	}, nil
+
+}
+
+func GetObject(b *Bucket, n string) (*Object, error) {
+	o, err := newObjectWithMetadata(b, n)
+	if err != nil {
+		return nil, fmt.Errorf("newObject: %w", err)
+	}
+
+	return o, nil
 }
 
 func ListObjects(w io.Writer, b *Bucket, q ...string) ([]*Object, error) {
@@ -159,16 +199,14 @@ func ListObjects(w io.Writer, b *Bucket, q ...string) ([]*Object, error) {
 			return nil, err
 		}
 
+		// name 변수를 아래 if문에서 할당하면 if문 빠져나오는 순간 값이 사라지므로 따로 선언한다.
 		name := attrs.Name
 
-		switch {
-		case len(name) == 0:
+		if len(name) == 0 {
 			name = attrs.Prefix
-		case name[len(name)-1] == '/':
-			continue
 		}
 
-		object, err := newObject(b, name)
+		object, err := newObjectWithoutMetadata(b, name)
 		if err != nil {
 			return nil, err
 		}
@@ -177,7 +215,7 @@ func ListObjects(w io.Writer, b *Bucket, q ...string) ([]*Object, error) {
 	return objects, nil
 }
 
-func GetMetadata(w io.Writer, b *Bucket, object string) (*storage.ObjectAttrs, error) {
+func GetMetadata(w io.Writer, b *Bucket, object string) (*Metadata, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -193,5 +231,11 @@ func GetMetadata(w io.Writer, b *Bucket, object string) (*storage.ObjectAttrs, e
 	if err != nil {
 		return nil, fmt.Errorf("Object(%q).Attrs: %w", object, err)
 	}
-	return attrs, nil
+	return &Metadata{
+		Name:    attrs.Name,
+		Bucket:  attrs.Bucket,
+		Size:    attrs.Size,
+		Created: attrs.Created,
+		Updated: attrs.Updated,
+	}, nil
 }

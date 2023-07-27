@@ -27,7 +27,7 @@ func ShowIndexPage(c *gin.Context) {
 		fmt.Printf("%+v\n", err)
 	}
 	switch {
-	// Error handling for string format
+	// String으로 반환된 에러는 다음과 같이 strings.Contains로 처리한다.
 	case strings.Contains(fmt.Sprint(err), "could not find default credentials"):
 		Render(c, gin.H{}, "credential_not_found.html")
 	case buckets == nil:
@@ -40,7 +40,7 @@ func ShowIndexPage(c *gin.Context) {
 	}
 }
 
-func ShowStoragePage(c *gin.Context) {
+func ShowBucketPage(c *gin.Context) {
 
 	bucket, err := gcs.ListBuckets(ioutil.Discard, projectID, c.Param("bucket_id"))
 	if err != nil {
@@ -52,7 +52,7 @@ func ShowStoragePage(c *gin.Context) {
 		fmt.Printf("%+v\n", err)
 	}
 
-	bucket[0].Objects = objects
+	//bucket[0].Objects = objects
 
 	// If any objects are not found
 	if objects == nil {
@@ -62,7 +62,7 @@ func ShowStoragePage(c *gin.Context) {
 			"object_id": "",
 			"bucket_id": bucket[0].Name,
 			"payload":   objects,
-		}, "article.html")
+		}, "storage.html")
 	}
 }
 
@@ -74,26 +74,33 @@ func ShowObjectPage(c *gin.Context) {
 		fmt.Printf("%+v\n", err)
 	}
 
-	objects, err := gcs.ListObjects(ioutil.Discard, bucket[0], name)
-	if err != nil {
-		fmt.Printf("%+v\n", err)
-	}
-
-	//bucket[0].Objects = objects
 	switch {
-	case objects == nil:
-		Render(c, gin.H{}, "object_not_found.html")
+
 	case name[len(name)-1] == '/':
-		Render(c, gin.H{
-			"object_id": name,
-			"bucket_id": c.Param("bucket_id"),
-			"payload":   objects,
-		}, "article.html")
+		objects, err := gcs.ListObjects(ioutil.Discard, bucket[0], name)
+		if err != nil {
+			fmt.Printf("%+v\n", err)
+		}
+
+		if objects == nil {
+			Render(c, gin.H{}, "object_not_found.html")
+		} else {
+			Render(c, gin.H{
+				"object_id": name,
+				"bucket_id": c.Param("bucket_id"),
+				"payload":   objects,
+			}, "storage.html")
+		}
+
 	default:
+		object, err := gcs.GetObject(bucket[0], name)
+		if err != nil {
+			fmt.Printf("%+v\n", err)
+		}
 		Render(c, gin.H{
 			"object_id": name,
 			"bucket_id": c.Param("bucket_id"),
-			"payload":   objects[0].Metadata,
+			"payload":   object,
 		}, "object.html")
 	}
 }

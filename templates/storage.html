@@ -1,0 +1,12 @@
+<!--article.html-->
+
+<!--Embed the header.html template at this location-->
+{{ template "header.html" .}}
+
+    {{range .payload }}
+        <a href="/storage/{{$.bucket_id}}/object/{{$.object_id}}{{.Name}}">
+            <p>{{.Name}}</p>
+        </a>       
+    {{end}}
+
+{{ template "footer.html" .}}

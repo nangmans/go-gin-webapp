@@ -5,10 +5,10 @@
 
 
         <h1>{{.payload.Name}}</h1>
-        <p>{{.payload.Bucket}}</p>
-        <p>{{.payload.Size}}</p>
-        <p>{{.payload.Created}}</p>
-        <p>{{.payload.Updated}}</p>
+        <p>Bucket : {{.payload.Metadata.Bucket}}</p>
+        <p>Size : {{.payload.Metadata.Size}}</p>
+        <p>Created : {{.payload.Metadata.Created}}</p>
+        <p>Updated : {{.payload.Metadata.Updated}}</p>
 
 
 <!--Embed the footer.html template at this location-->
