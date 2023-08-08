@@ -11,15 +11,6 @@ import (
 
 const projectID string = "sandbox-393317"
 
-// func SetBucket(c *gin.Context) {
-// 	buckets, err := gcs.ListBuckets(ioutil.Discard, projectID)
-// 	if err != nil {
-// 		fmt.Printf("ListBuckets: %s", err)
-// 	}
-// 	c.Set("buckets", buckets)
-// 	c.Next()
-// }
-
 // This comment is required for go doc when the function is exported.
 func ShowIndexPage(c *gin.Context) {
 	buckets, err := gcs.ListBuckets(ioutil.Discard, projectID)

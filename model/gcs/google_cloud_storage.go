@@ -44,8 +44,8 @@ func ListBuckets(w io.Writer, projectID string, name ...string) ([]*Bucket, erro
 	}
 	defer client.Close()
 
-	ctx, cancle := context.WithTimeout(ctx, time.Second*30)
-	defer cancle()
+	ctx, cancel := context.WithTimeout(ctx, time.Second*30)
+	defer cancel()
 
 	it := client.Buckets(ctx, projectID)
 
@@ -206,6 +206,7 @@ func ListObjects(w io.Writer, b *Bucket, q ...string) ([]*Object, error) {
 			name = attrs.Prefix
 		}
 
+		// Object List 페이지에서 Metadata를 호출하면 응답이 느려지므로 Metadata 없는 ObjectList 함수를 따로 정의해 사용한다.
 		object, err := newObjectWithoutMetadata(b, name)
 		if err != nil {
 			return nil, err
